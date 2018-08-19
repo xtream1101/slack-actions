@@ -1,9 +1,6 @@
-import re
 import json
 import falcon
 import logging
-import requests
-from pprint import pprint
 import urllib.parse
 from slack_actions.slack_controller import slack_controller
 
@@ -34,8 +31,8 @@ class Event(object):
 
         # 1. Get the user, channel, and file (if needed) from the event
         try:
-            if (event.get('type') == 'interactive_message' and event['user']['id'] == slack_controller.BOT_ID) or\
-                event.get('event', {}).get('bot_id') == slack_controller.BOT_ID:
+            if ((event.get('type') == 'interactive_message' and event['user']['id'] == slack_controller.BOT_ID) or
+                    event.get('event', {}).get('bot_id') == slack_controller.BOT_ID):
                 # Do not let the bot interact with itself, but still allow other bots to trigger it
                 return
 

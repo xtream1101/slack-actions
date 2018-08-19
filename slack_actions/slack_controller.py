@@ -1,13 +1,8 @@
 import os
 import re
 import copy
-import time
-import json
 import inspect
 import logging
-import requests
-import urllib.error
-import urllib.request
 from collections import defaultdict
 from slackclient import SlackClient
 
@@ -36,10 +31,10 @@ class Parser:
             for event_type in event_types:
                 self.triggers[event_type][func].append({'pattern': parse_using, 'args': args, 'kwargs': kwargs})
                 logger.info("Registered {event_type} listener for {func_name} to regex `{parse_using}`"
-                        .format(event_type=event_type,
-                                # class_name=func.__self__.__class__.__name__,  # TODO: Make work for functions too
-                                func_name=func.__name__,
-                                parse_using=parse_using))
+                            .format(event_type=event_type,
+                                    class_name='',  # func.__self__.__class__.__name__,  # TODO: fix for fns
+                                    func_name=func.__name__,
+                                    parse_using=parse_using))
             return func
 
         return wrapper
@@ -48,8 +43,8 @@ class Parser:
         def wrapper(func):
             self.helpers[func].append(dict(kwargs))
             logger.info("Registered helper for {func_name}"
-                    .format(# class_name=func.__self__.__class__.__name__,  # TODO: Make work for functions too
-                            func_name=func.__name__))
+                        .format(class_name='',  # func.__self__.__class__.__name__,  # TODO: fix for fns
+                                func_name=func.__name__))
             return func
 
         return wrapper
@@ -249,7 +244,8 @@ class SlackController:
     def get_user(self, key):
         """Get the user data
 
-        TODO: If the user does not exist, refresh from the api. Store in a real cache so it does not need to hit on every reload
+        TODO: If the user does not exist, refresh from the api.
+              Store in a real cache so it does not need to hit on every reload
 
         Arguments:
             key {str} -- Either the name or id of the user
@@ -262,7 +258,8 @@ class SlackController:
     def get_channel(self, key):
         """Get the channel data
 
-        TODO: If the channel does not exist, refresh from the api. Store in a real cache so it does not need to hit on every reload
+        TODO: If the channel does not exist, refresh from the api.
+              Store in a real cache so it does not need to hit on every reload
 
         Arguments:
             key {str} -- Either the name or id of the channel
@@ -318,7 +315,6 @@ class SlackController:
                         'method': 'chat.postMessage',
                         }
 
-            # all_channel_event_actions = slack_controller.get_all_channel_event_actions(full_data['channel']['name'], event_type)
             callback_output = None
             # Loop over all triggers for a given command
             for action in all_channel_event_actions:
