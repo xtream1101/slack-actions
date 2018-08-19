@@ -1,5 +1,6 @@
 import os
 import re
+import copy
 import time
 import json
 import inspect
@@ -60,11 +61,23 @@ class Parser:
 
             for key, regex_pattern in trigger['pattern'].items():
                 key_parts = key.split('.')
-                input_str = full_data['event']
+                if full_data['event']['type'] == 'event_callback':
+                    input_str = copy.deepcopy(full_data['event']['event'])
+                else:
+                    input_str = copy.deepcopy(full_data['event'])
+
                 for part in key_parts:
+                    if isinstance(input_str, list):
+                        # check if current key is an index, if so use it, otherwise default to 0
+                        try:
+                            idx = int(part)
+                            input_str = input_str[idx]
+                            continue  # Move on to the next part
+                        except ValueError:
+                            # Default to the first item and then use the next key
+                            input_str = input_str[0]
+
                     input_str = input_str[part]
-                    if part in ['files']:  # Need to add an index on these
-                        input_str = input_str[0]
 
                 # Check the regex agains this field
                 result = re.search(regex_pattern, input_str)
@@ -174,6 +187,20 @@ class SlackController:
             self.help_message_regex = re.compile('^(?:{bot_name} )?help$'.format(bot_name=self.BOT_NAME),
                                                  flags=re.IGNORECASE)
 
+    def help_trigger(self, full_data, event_type):
+        if event_type != 'message' or not re.match(self.help_message_regex, full_data['event']['event']['text']):
+            return False
+
+        all_channel_actions = self.get_all_channel_actions(full_data['channel']['name'])
+        help_message = self.help(all_channel_actions, self.slack_client, full_event=full_data)
+        slack_response = self.slack_client.api_call(**help_message)
+        if slack_response['ok'] is False:
+            error_message = "Slack Web API Response: {error} {content}"\
+                            .format(error=slack_response['error'], content=slack_response.get('needed', ''))
+            logger.error(error_message)
+
+        return True
+
     def help(self, all_channel_actions, slack_client, full_event):
         """Default help response
 
@@ -257,10 +284,24 @@ class SlackController:
 
         return all_channel_callbacks
 
-    def get_all_channel_actions(self, channel_name, event_type='message'):
+    def get_all_channel_event_actions(self, channel_name, event_type):
         channel_actions = []
         all_channel_callbacks = self.get_all_channel_callbacks(channel_name)
-        all_actions = self.parser.triggers[event_type]
+        all_event_actions = self.parser.triggers[event_type]
+
+        for callback in all_channel_callbacks:
+            if callback in all_event_actions:
+                triggers = all_event_actions[callback]
+                channel_actions.append({'callback': callback, 'triggers': triggers})
+
+        return channel_actions
+
+    def get_all_channel_actions(self, channel_name):
+        channel_actions = []
+        all_channel_callbacks = self.get_all_channel_callbacks(channel_name)
+        all_actions = {}
+        for triggers in self.parser.triggers.values():
+            all_actions.update(triggers)
 
         for callback in all_channel_callbacks:
             if callback in all_actions:
@@ -268,6 +309,34 @@ class SlackController:
                 channel_actions.append({'callback': callback, 'triggers': triggers})
 
         return channel_actions
+
+    def process_event(self, full_data, event_type):
+        try:
+            all_channel_event_actions = self.get_all_channel_event_actions(full_data['channel']['name'], event_type)
+            # Default response
+            response = {'channel': full_data['channel']['id'],
+                        'method': 'chat.postMessage',
+                        }
+
+            # all_channel_event_actions = slack_controller.get_all_channel_event_actions(full_data['channel']['name'], event_type)
+            callback_output = None
+            # Loop over all triggers for a given command
+            for action in all_channel_event_actions:
+                callback_output = self.parser.parse_event(full_data, action['callback'], action['triggers'])
+                if callback_output is not None:
+                    break
+
+            if callback_output is not None:
+                # Found a trigger that worked
+                response.update(callback_output)
+                slack_response = self.slack_client.api_call(**response)
+                if slack_response['ok'] is False:
+                    error_message = "Slack Web API Response: {error} {content}"\
+                                    .format(error=slack_response['error'], content=slack_response.get('needed', ''))
+                    logger.error(error_message)
+
+        except Exception:
+            logger.exception("Broke trying to trigger a command")
 
 
 parser = Parser()

@@ -27,25 +27,27 @@ class Event(object):
             return
 
         # By the end, should always have the keys:
-        full_data = {'event': event['event'],  # The original event message from slack
+        full_data = {'event': event,  # The original event message from slack
                      'user': None,  # All the user info pulled from the slack api of the uer who triggered the event
                      'channel': None,  # The channel/dm info from the slack api on wher the event happened
                      }
 
         # 1. Get the user, channel, and file (if needed) from the event
         try:
-            if event['event'].get('bot_id') == slack_controller.BOT_ID:
+            if (event.get('type') == 'interactive_message' and event['user']['id'] == slack_controller.BOT_ID) or\
+                event.get('event', {}).get('bot_id') == slack_controller.BOT_ID:
                 # Do not let the bot interact with itself, but still allow other bots to trigger it
                 return
 
             logger.debug("Original slack event:\n" + str(json.dumps(event)))
 
             try:
+                # Get the event type
                 event_type = event['event']['type']
                 if 'subtype' in event['event']:
                     event_type += '.' + event['event']['subtype']
-
             except KeyError:
+                # Prob some interactive or something else
                 event_type = event['type']
 
             # Add more event types as needed to get the correct information
@@ -59,6 +61,10 @@ class Event(object):
                 full_data['user'] = slack_controller.get_user(event['user']['id'])
                 full_data['channel'] = slack_controller.get_channel(event['channel']['id'])
 
+            elif event_type in ['message.message_changed']:
+                full_data['user'] = slack_controller.get_user(event['event']['message']['user'])
+                full_data['channel'] = slack_controller.get_channel(event['event']['channel'])
+
             else:
                 full_data['user'] = slack_controller.get_user(event['event']['user'])
                 full_data['channel'] = slack_controller.get_channel(event['event']['channel'])
@@ -66,51 +72,12 @@ class Event(object):
         except Exception:
             logger.exception("Broke generating `full_data`")
 
-        # all_channel_commands = slack_controller.get_all_channel_commands(full_data['channel']['name'])
-        all_channel_actions = slack_controller.get_all_channel_actions(full_data['channel']['name'], event_type)
-
-        # 2 - Check if its the help message
-        # TODO: Make func in slack_controller
-        if event_type == 'message':
-            if re.match(slack_controller.help_message_regex, event['event']['text']):
-                help_message = slack_controller.help(all_channel_actions, slack_controller.slack_client, full_event=full_data)
-                slack_response = slack_controller.slack_client.api_call(**help_message)
-                if slack_response['ok'] is False:
-                    error_message = "Slack Web API Response: {error} {content}"\
-                                    .format(error=slack_response['error'], content=slack_response.get('needed', ''))
-                    logger.error(error_message)
-                # If the help message was triggered, do nothing else
-                return
+        # 2 - Check if its the help message, if so do nothing else
+        if slack_controller.help_trigger(full_data, event_type):
+            return
 
         # 3. Check the commands that are listening to see which needs to be triggered
-        # TODO: Make func in slack_controller
-        try:
-            # Default response
-            response = {'channel': full_data['channel']['id'],
-                        'method': 'chat.postMessage',
-                        }
-
-            # all_channel_actions = slack_controller.get_all_channel_actions(full_data['channel']['name'], event_type)
-            callback_output = None
-            # Loop over all triggers for a given command
-            for action in all_channel_actions:
-                from pprint import pprint
-                # pprint(action)
-                callback_output = slack_controller.parser.parse_event(full_data, action['callback'], action['triggers'])
-                if callback_output is not None:
-                    break
-
-            if callback_output is not None:
-                # Found a trigger that worked
-                response.update(callback_output)
-                slack_response = slack_controller.slack_client.api_call(**response)
-                if slack_response['ok'] is False:
-                    error_message = "Slack Web API Response: {error} {content}"\
-                                    .format(error=slack_response['error'], content=slack_response.get('needed', ''))
-                    logger.error(error_message)
-
-        except Exception:
-            logger.exception("Broke trying to trigger a command")
+        slack_controller.process_event(full_data, event_type)
 
 
 app = falcon.API()
