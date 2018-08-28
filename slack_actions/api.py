@@ -51,8 +51,9 @@ class Event(object):
             if event_type in ['file_shared', 'file_created']:
                 # Really should use message.file_share instead since it has all the file info already in it
                 full_data['user'] = slack_controller.get_user(event['event']['user_id'])
-                file_data = slack_controller.get_file(event['event']['file_id'])  # Need this for the channel id
-                full_data['channel'] = slack_controller.get_channel(file_data['channels'][0])
+                # Need this for the channel id
+                file_data = slack_controller.slack_client.api_call('files.info', file=event['event']['file_id'])
+                full_data['channel'] = slack_controller.get_channel(file_data['file']['channels'][0])
 
             elif event_type in ['interactive_message']:
                 full_data['user'] = slack_controller.get_user(event['user']['id'])
@@ -61,6 +62,10 @@ class Event(object):
             elif event_type in ['message.message_changed']:
                 full_data['user'] = slack_controller.get_user(event['event']['message']['user'])
                 full_data['channel'] = slack_controller.get_channel(event['event']['channel'])
+
+            elif event_type in ['reaction_added']:
+                full_data['user'] = slack_controller.get_user(event['event']['user'])
+                full_data['channel'] = slack_controller.get_channel(event['event']['item']['channel'])
 
             else:
                 full_data['user'] = slack_controller.get_user(event['event']['user'])
