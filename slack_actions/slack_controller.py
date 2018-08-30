@@ -107,8 +107,8 @@ class Parser:
 
 class SlackController:
 
-    def __init__(self, parser):
-        self.parser = parser
+    def __init__(self):
+        self.parser = Parser()
         self.channel_to_callbacks = defaultdict(list)  # Filled in by the user
 
         # Defaults for the help message
@@ -156,13 +156,12 @@ class SlackController:
 
     def setup(self, slack_bot_token=None):
         # Do not have this in __init__ because this is not needed when running tests
-        # TODO: Should the OS var overide the one passed in?????
-        self.SLACK_BOT_TOKEN = slack_bot_token
+        self.SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN')
         if self.SLACK_BOT_TOKEN is None:
-            self.SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN')
+            self.SLACK_BOT_TOKEN = slack_bot_token
 
-        if self.SLACK_BOT_TOKEN is None:
-            raise ValueError("Missing SLACK_callbacksBOT_TOKEN")
+        if not self.SLACK_BOT_TOKEN:
+            raise ValueError("Missing SLACK_BOT_TOKEN")
 
         self.slack_client = SlackClient(self.SLACK_BOT_TOKEN)
         self.channels = self._get_conversation_list()  # Includes groups and channels
@@ -370,5 +369,4 @@ class SlackController:
             logger.exception("Broke trying to trigger a command")
 
 
-parser = Parser()
-slack_controller = SlackController(parser)
+slack_controller = SlackController()
