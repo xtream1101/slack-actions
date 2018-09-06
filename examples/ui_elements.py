@@ -7,7 +7,7 @@ class UIElements:
         # Dropdown menu
         self.menu = slack_controller.trigger(['message'], {'text': 'test menu'})(self.menu)
         self.menu = slack_controller.help_message(author_name="trigger:message",
-                                                  color="#ffee55",
+                                                  color="#b3e6cc",
                                                   text="Type:\n> test menu")(self.menu)
 
         self.menu_action = slack_controller.trigger('interactive_message',
@@ -17,7 +17,7 @@ class UIElements:
         # Buttons
         self.button = slack_controller.trigger(['message'], {'text': 'test button'})(self.button)
         self.button = slack_controller.help_message(author_name="trigger:message",
-                                                    color="#ffee55",
+                                                    color="#40bf80",
                                                     text="Type:\n> test button")(self.button)
 
         self.button_action = slack_controller.trigger('interactive_message',
