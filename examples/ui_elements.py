@@ -5,24 +5,24 @@ class UIElements:
 
     def __init__(self):
         # Dropdown menu
-        self.menu = slack_controller.parser.trigger(['message'], {'text': 'test menu'})(self.menu)
-        self.menu = slack_controller.parser.help(author_name="trigger:message",
-                                                 color="#ffee55",
-                                                 text="Type:\n> test menu")(self.menu)
+        self.menu = slack_controller.trigger(['message'], {'text': 'test menu'})(self.menu)
+        self.menu = slack_controller.help_message(author_name="trigger:message",
+                                                  color="#ffee55",
+                                                  text="Type:\n> test menu")(self.menu)
 
-        self.menu_action = slack_controller.parser.trigger('interactive_message',
-                                                           {'callback_id': 'game_selection',
-                                                            'actions.selected_options.value': '(.*)'})(self.menu_action)
+        self.menu_action = slack_controller.trigger('interactive_message',
+                                                    {'callback_id': 'game_selection',
+                                                     'actions.selected_options.value': '(.*)'})(self.menu_action)
 
         # Buttons
-        self.button = slack_controller.parser.trigger(['message'], {'text': 'test button'})(self.button)
-        self.button = slack_controller.parser.help(author_name="trigger:message",
-                                                   color="#ffee55",
-                                                   text="Type:\n> test button")(self.button)
+        self.button = slack_controller.trigger(['message'], {'text': 'test button'})(self.button)
+        self.button = slack_controller.help_message(author_name="trigger:message",
+                                                    color="#ffee55",
+                                                    text="Type:\n> test button")(self.button)
 
-        self.button_action = slack_controller.parser.trigger('interactive_message',
-                                                             {'callback_id': 'wopr_game',
-                                                              'actions.0.value': '(.*)'})(self.button_action)
+        self.button_action = slack_controller.trigger('interactive_message',
+                                                      {'callback_id': 'wopr_game',
+                                                       'actions.0.value': '(.*)'})(self.button_action)
 
     def menu(self, output, full_event):
         message_data = {

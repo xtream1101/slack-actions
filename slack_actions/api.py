@@ -75,7 +75,7 @@ class Event(object):
             logger.exception("Broke generating `full_data`")
 
         # 2 - Check if its the help message, if so do nothing else
-        if slack_controller.help_trigger(full_data, event_type):
+        if slack_controller.help_check(full_data, event_type):
             return
 
         # 3. Check the commands that are listening to see which needs to be triggered
