@@ -8,7 +8,7 @@ This project is to make it simple to have a single slackbot that can have differ
 First you need to create a Slack App to get a Workspace Token. With slack apps you need to give it permissions for each thing you want it to listen to or things it can do. Remember that each time to edit the permissions you will need to update (re-add) the App to your team for the new/updated permissions to take affect.
 Since slack apps work by hitting an api endpoint, you will need an public facing endpoint to test with. You can use [ngrok](https://ngrok.com/) or anything similar for development.
 
-To install, either run the `setup.py install`
+To install, either run the `setup.py install`  
 or install via pip (**recommended**): `pip install slack_actions`
 
 Basic Example (`run.py`):
@@ -44,7 +44,7 @@ slack_controller.add_commands(commands)
 if __name__ == '__main__':
     logger.critical("\nRun listener by doing (replace `run` with this filename):\n\tgunicorn -b 0.0.0.0:5000 run:app \n")
 ```
-_You can find more examples in the `examples/` directory._
+_You can find more examples in the `examples/` directory._  
 To run this basic example, type: `gunicorn -b 0.0.0.0:5000 run:app`, this will start the api web server that slack can post to.
 
 In any channel, you can type the message `help` and the slack bot should return all the help messages for the commands in that channel.
