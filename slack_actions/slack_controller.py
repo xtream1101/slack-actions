@@ -307,9 +307,14 @@ class SlackController:
                 self.triggers[event_type][func].append({'pattern': parse_using,
                                                         'args': args,
                                                         'kwargs': kwargs})
-                logger.info("Registered {event_type} listener for {func_name} to regex `{parse_using}`"
+                try:
+                    cls_name = func.__self__.__class__.__name__ + '.'
+                except AttributeError:
+                    cls_name = ''
+
+                logger.info("Registered {event_type} listener for {cls_name}{func_name} to regex `{parse_using}`"
                             .format(event_type=event_type,
-                                    class_name='',  # func.__self__.__class__.__name__,  # TODO: fix for fns
+                                    cls_name=cls_name,
                                     func_name=func.__name__,
                                     parse_using=parse_using))
             return func
@@ -319,8 +324,12 @@ class SlackController:
     def help_message(self, **kwargs):
         def wrapper(func):
             self.helpers[func].append(dict(kwargs))
-            logger.info("Registered helper for {func_name}"
-                        .format(class_name='',  # func.__self__.__class__.__name__,  # TODO: fix for fns
+            try:
+                cls_name = func.__self__.__class__.__name__ + '.'
+            except AttributeError:
+                cls_name = ''
+            logger.info("Registered helper for {cls_name}{func_name}"
+                        .format(cls_name=cls_name,
                                 func_name=func.__name__))
             return func
 
