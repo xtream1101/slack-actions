@@ -193,17 +193,9 @@ class SlackController:
             return False
 
         all_channel_actions = self.get_all_channel_actions(full_data['channel']['name'])
-        help_message = self.help(all_channel_actions, full_data)
-        slack_response = self.slack_client.api_call(**help_message)
-        if slack_response['ok'] is False:
-            error_message = "Slack Web API Response: {error} {content}"\
-                            .format(error=slack_response['error'],
-                                    content=slack_response.get('needed', ''))
-            logger.error(error_message)
+        self.help_action(all_channel_actions, full_data)
 
-        return True
-
-    def help(self, all_channel_actions, full_data):
+    def help_action(self, all_channel_actions, full_data):
         """Get all of the help commands form the channel
 
         Arguments:
@@ -229,7 +221,13 @@ class SlackController:
                 helper_attacment.update(helper)
                 message_data['attachments'].append(helper_attacment)
 
-        return message_data
+        # Post to slack
+        slack_response = self.slack_client.api_call(**message_data)
+        if slack_response['ok'] is False:
+            error_message = "Slack Web API Response: {error} {content}"\
+                            .format(error=slack_response['error'],
+                                    content=slack_response.get('needed', ''))
+            logger.error(error_message)
 
     def _get_conversation_list(self):
         """Get all channel data and save by name and id

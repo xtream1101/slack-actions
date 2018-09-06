@@ -39,7 +39,7 @@ class Example:
     def add_reaction(self, output, full_event):
         message_data = {'method': 'reactions.add',
                         'name': output['reaction'][0],
-                        # Respond in the thread if thats where the file was uploaded to
+                        # Adds the reaction to the correct message
                         'timestamp': full_event['event']['event']['item']['ts'],
                         }
         return message_data
