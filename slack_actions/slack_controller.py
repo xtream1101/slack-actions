@@ -161,30 +161,46 @@ class SlackController:
     def get_user(self, key):
         """Get the user data
 
-        TODO: If the user does not exist, refresh from the api.
-              Store in a real cache so it does not need to hit on every reload
+        Try and get the user from self.users, if it can't then refresh the user list and try again
 
         Arguments:
             key {str} -- Either the name or id of the user
 
         Returns:
-            dict -- The data about the user from the slack api
+            dict/None -- The data about the user from the slack api
         """
-        return self.users.get(key)
+        for _ in range(2):
+            user = self.users.get(key)
+            if user is None:
+                # Update user list from slack api and try and get the user again
+                self.users = self._get_user_list()
+            else:
+                # We found the user, so no need to loop again
+                break
+
+        return user
 
     def get_channel(self, key):
         """Get the channel data
 
-        TODO: If the channel does not exist, refresh from the api.
-              Store in a real cache so it does not need to hit on every reload
+        Try and get the channel from self.channels, if it can't then refresh the channel list and try again
 
         Arguments:
             key {str} -- Either the name or id of the channel
 
         Returns:
-            dict -- The data about the channel from the slack api
+            dict/None -- The data about the channel from the slack api
         """
-        return self.channels.get(key)
+        for _ in range(2):
+            channel = self.channels.get(key)
+            if channel is None:
+                # Update channel list from slack api and try and get the channel again
+                self.channels = self._get_conversation_list()
+            else:
+                # We found the channel, so no need to loop again
+                break
+
+        return channel
 
     def get_all_channel_callbacks(self, channel_name):
         """Get all the callbacks in the given channel
