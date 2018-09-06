@@ -1,6 +1,10 @@
 # Slackbot
 Create custom actions based on slack events
 
+[![PyPI](https://img.shields.io/pypi/v/slack_actions.svg)](https://pypi.python.org/pypi/slack_actions)
+[![PyPI](https://img.shields.io/pypi/l/slack_actions.svg)](https://pypi.python.org/pypi/slack_actions)
+
+
 This project is to make it simple to have a single slackbot that can have different commands in different slack channels. This is done by having functions or classes that get added to a channel, and each function/method has a regex trigger that it is listening for in the channel it is in. If the trigger and channel match, then it will run that function.
 
 
