@@ -63,6 +63,10 @@ class Event(object):
                 full_data['user'] = slack_controller.get_user(event['event']['message']['user'])
                 full_data['channel'] = slack_controller.get_channel(event['event']['channel'])
 
+            elif event_type in ['message.message_deleted']:
+                full_data['user'] = slack_controller.get_user(event['event']['previous_message']['user'])
+                full_data['channel'] = slack_controller.get_channel(event['event']['channel'])
+
             elif event_type in ['reaction_added']:
                 full_data['user'] = slack_controller.get_user(event['event']['user'])
                 full_data['channel'] = slack_controller.get_channel(event['event']['item']['channel'])
