@@ -162,14 +162,29 @@ class SlackController:
             dict -- All channel data, accessible by name or id
         """
         conversations = {}
-        slack_response = self.slack_client.api_call('conversations.list')
-        if slack_response['ok'] is False:
-            error_message = "{error} {content}".format(error=slack_response['error'],
-                                                       content=slack_response.get('needed', ''))
-            raise SlackApiError(error_message)
+        raw_conversation_list = []
+        # Get all pages
+        next_cursor = 'start'
+        while next_cursor:
+            if next_cursor == 'start':  # To get the first page
+                next_cursor = None
+            slack_response = self.slack_client.api_call('conversations.list',
+                                                        limit=1000,
+                                                        cursor=next_cursor,
+                                                        types='public_channel,private_channel,mpim,im')
+            if slack_response['ok'] is False:
+                error_message = "{error} {content}".format(error=slack_response['error'],
+                                                           content=slack_response.get('needed', ''))
+                raise SlackApiError(error_message)
+            raw_conversation_list.extend(slack_response['channels'])
+            # See if ther is another page
+            next_cursor = slack_response['response_metadata'].get('next_cursor')
 
-        for conversation in slack_response['channels']:
-            conversations[conversation['name']] = conversation
+        for conversation in raw_conversation_list:
+            try:
+                conversations[conversation['name']] = conversation
+            except KeyError:
+                pass
             conversations[conversation['id']] = conversation
 
         return conversations
@@ -181,13 +196,21 @@ class SlackController:
             dict -- All user data, accessible by name or id
         """
         users = {}
-        slack_response = self.slack_client.api_call('users.list')
-        if slack_response['ok'] is False:
-            error_message = "{error} {content}".format(error=slack_response['error'],
-                                                       content=slack_response.get('needed', ''))
-            raise SlackApiError(error_message)
+        raw_user_list = []
+        next_cursor = 'start'
+        while next_cursor:
+            if next_cursor == 'start':  # To get the first page
+                next_cursor = None
+            slack_response = self.slack_client.api_call('users.list', limit=1000, cursor=next_cursor)
+            if slack_response['ok'] is False:
+                error_message = "{error} {content}".format(error=slack_response['error'],
+                                                           content=slack_response.get('needed', ''))
+                raise SlackApiError(error_message)
+            raw_user_list.extend(slack_response['members'])
+            # See if ther is another page
+            next_cursor = slack_response['response_metadata'].get('next_cursor')
 
-        for user in slack_response.get('members', []):
+        for user in raw_user_list:
             users[user['name']] = user
             users[user['id']] = user
 
@@ -234,6 +257,9 @@ class SlackController:
             else:
                 # We found the channel, so no need to loop again
                 break
+
+        if not channel:
+            logger.warning('The app does not have access to the channel {}'.format(key))
 
         return channel
 
@@ -294,6 +320,10 @@ class SlackController:
             full_data {dict} -- The event from the slack api as well as user and channel data
             event_type {str} -- Event type of the event that was sent by slack
         """
+        if not full_data['channel']:
+            # Does not have access to channel
+            return
+
         try:
             all_channel_event_actions = self.get_all_channel_actions(full_data['channel']['name'],
                                                                      event_type=event_type)
