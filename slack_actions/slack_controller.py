@@ -9,6 +9,10 @@ from slackclient import SlackClient
 logger = logging.getLogger(__name__)
 
 
+class SlackApiError(Exception):
+    pass
+
+
 class SlackController:
 
     def __init__(self):
@@ -72,14 +76,31 @@ class SlackController:
         self.channels = self._get_conversation_list()  # Includes groups and channels
         self.users = self._get_user_list()
 
-        self.BOT_ID = self.slack_client.api_call('users.profile.get')['profile']['bot_id']
-        self.BOT_USER_ID = self.slack_client.api_call('bots.info',
-                                                      bot=self.BOT_ID)['bot']['user_id']
+        self.BOT_ID = self._get_bot_id()
+        self.BOT_USER_ID = self._get_bot_user_id(self.BOT_ID)
         self.BOT_NAME = '<@{}>'.format(self.BOT_USER_ID)
 
         if self.help_message_regex is None:
             self.help_message_regex = re.compile('^(?:{bot_name} )?help$'.format(bot_name=self.BOT_NAME),
                                                  flags=re.IGNORECASE)
+
+    def _get_bot_id(self):
+        slack_response = self.slack_client.api_call('users.profile.get')
+        if slack_response['ok'] is False:
+            error_message = "{error} {content}".format(error=slack_response['error'],
+                                                       content=slack_response.get('needed', ''))
+            raise SlackApiError(error_message)
+        else:
+            return slack_response['profile']['bot_id']
+
+    def _get_bot_user_id(self, bot_id):
+        slack_response = self.slack_client.api_call('bots.info', bot=bot_id)
+        if slack_response['ok'] is False:
+            error_message = "{error} {content}".format(error=slack_response['error'],
+                                                       content=slack_response.get('needed', ''))
+            raise SlackApiError(error_message)
+
+        return slack_response['bot']['user_id']
 
     def help_check(self, full_data, event_type):
         """Check if the help message should be triggered
@@ -141,9 +162,16 @@ class SlackController:
             dict -- All channel data, accessible by name or id
         """
         conversations = {}
-        for conversation in self.slack_client.api_call('conversations.list').get('channels', []):
+        slack_response = self.slack_client.api_call('conversations.list')
+        if slack_response['ok'] is False:
+            error_message = "{error} {content}".format(error=slack_response['error'],
+                                                       content=slack_response.get('needed', ''))
+            raise SlackApiError(error_message)
+
+        for conversation in slack_response['channels']:
             conversations[conversation['name']] = conversation
             conversations[conversation['id']] = conversation
+
         return conversations
 
     def _get_user_list(self):
@@ -153,9 +181,16 @@ class SlackController:
             dict -- All user data, accessible by name or id
         """
         users = {}
-        for user in self.slack_client.api_call('users.list').get('members', []):
+        slack_response = self.slack_client.api_call('users.list')
+        if slack_response['ok'] is False:
+            error_message = "{error} {content}".format(error=slack_response['error'],
+                                                       content=slack_response.get('needed', ''))
+            raise SlackApiError(error_message)
+
+        for user in slack_response.get('members', []):
             users[user['name']] = user
             users[user['id']] = user
+
         return users
 
     def get_user(self, key):

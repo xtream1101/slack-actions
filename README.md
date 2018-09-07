@@ -9,8 +9,18 @@ This project is to make it simple to have a single slackbot that can have differ
 
 
 ## How to use
-First you need to create a Slack App to get a Workspace Token. With slack apps you need to give it permissions for each thing you want it to listen to or things it can do. Remember that each time to edit the permissions you will need to update (re-add) the App to your team for the new/updated permissions to take affect.
-Since slack apps work by hitting an api endpoint, you will need an public facing endpoint to test with. You can use [ngrok](https://ngrok.com/) or anything similar for development.
+First you need to create a Slack Workspace App. You will find your Access Token under the _OAuth & Permissions_ section.  
+With Slack apps, you need to give it permissions for what you want it to do. By default it needs at least these permissions to run:
+- users:read
+- users.profile:read
+- TODO....
+- 
+
+Remember that each time to edit the permissions you will need to re install the App to your team for the new/updated permissions to take affect.
+
+Since slack apps work by hitting an api endpoint, you will need an public facing endpoint to test with. You can use [ngrok](https://ngrok.com/) or anything similar for development. The endpoint that you will be hitting on the server will always be `example.com/slack/event`. This will need to be added in the _Event Subscriptions_ section of the App. Be sure to add _Workplace Events_ otherwise slack will never hit your bot with an action. To get started try adding **_message.channels_**, for each event you add you will need to add the required permission too. In this case the permission **_channels:history_** needs to be added.
+
+To add the app to a channel, go into the app settings and add to any channels that you would like it to be in.
 
 To install, either run the `setup.py install`  
 or install via pip (**recommended**): `pip install slack_actions`
