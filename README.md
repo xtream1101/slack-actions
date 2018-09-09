@@ -17,7 +17,7 @@ With Slack apps, you need to give it permissions for what you want it to do. By 
 
 Remember that each time to edit the permissions you will need to re install the App to your team for the new/updated permissions to take affect.
 
-Since slack apps work by hitting an api endpoint, you will need an public facing endpoint to test with. You can use [ngrok](https://ngrok.com/) or anything similar for development. The endpoint that you will be hitting on the server will always be `example.com/slack/event`. This will need to be added in the _Event Subscriptions_ section of the App. Be sure to add _Workplace Events_ otherwise slack will never hit your bot with an action. To get started try adding **_message.channels_**, for each event you add you will need to add the required permission too. In this case the permission **_channels:history_** will be added.
+Since slack apps work by hitting an api endpoint, you will need an public facing endpoint to test with. You can use [ngrok](https://ngrok.com/) or anything similar for development _(see below for custom solution)_. The endpoint that you will be hitting on the server will always be `example.com/slack/event`. This will need to be added in the _Event Subscriptions_ section of the App. Be sure to add _Workplace Events_ otherwise slack will never hit your bot with an action. To get started try adding **_message.channels_**, for each event you add you will need to add the required permission too. In this case the permission **_channels:history_** will be added.
 
 To add the app to a channel, go into the app settings and add to any channels that you would like it to be in.
 
@@ -77,3 +77,20 @@ This is used to tell the function when to run. There are 2 positional arguments 
 ### `slack_controller.help_message`
 This is used when the user types `help` in a channel to let them know what commands they have available to use. The named arguments map to the keys in the [Slack message attachements](https://api.slack.com/docs/message-attachments). The examples in this repo all follow a similar formatting, but they can be any combination of argumenst to fit the functions help message needs.
 `@slack_controller.help_message(author_name="trigger:message", color="#3366ff", text="Type:\n> foobar")`
+
+
+## Setting up a custom tunnel for development
+
+To create an ssh tunnel for slack-actions development
+
+### Server setup
+1. Create a server and make sure it has ssh enabled.
+2. Edit the `/etc/ssh/sshd_config` file with `sudo` and set `Gatewayports yes`
+
+### Developing locally
+1. From the client (your laptop) create a ssh tunnel by doing: `ssh -i ~/.ssh/id_rsa -NR 1337:localhost:5000 user@remote_host`
+    - Port 5000 is the local port your application is running on
+    - Port 1337 is the remote port and is how your application will be accessed by using the remote servers host.
+    - Each user will have their own remote port they use for local development
+2. Update your development slack app to point to the `remote_host:port` that you configured
+3. Now everytime you want to develop the bot, just run the above ssh command found in step 1 and you are good to go
