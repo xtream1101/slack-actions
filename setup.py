@@ -1,18 +1,15 @@
-from distutils.core import setup
+from setuptools import setup
 
-try:
-    import pypandoc
-    long_description = pypandoc.convert('README.md', 'rst', format='md')
-except (IOError, ImportError) as e:
-    print(str(e))
-    long_description = ''
+with open('README.md', 'r') as f:
+    long_description = f.read()
 
 setup(
     name='slack-actions',
     packages=['slack_actions'],
-    version='0.1.0',
+    version='0.1.2',
     description='Build custom slackbots with ease',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Eddy Hintze',
     author_email="eddy@hintze.co",
     url="https://github.com/xtream1101/slack-actions",
