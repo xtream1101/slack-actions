@@ -29,10 +29,10 @@ slack_controller.setup()
 #     help_orig(all_channel_actions, full_data)
 
 #     # Also add a reaction to the help message so others know they have been helped
-#     message_data = {'channel': full_data['channel']['id'],
+#     message_data = {'channel': full_data['sa_channel']['id'],
 #                     'method': 'reactions.add',
 #                     'name': 'thumbsup',
-#                     'timestamp': full_data['event']['event']['event_ts']
+#                     'timestamp': full_data['event']['event_ts']
 #                     }
 #     slack_response = slack_controller.slack_client.api_call(**message_data)
 #     if slack_response['ok'] is False:

@@ -25,17 +25,17 @@ class Example:
     def message_a(self, output, full_event):
         message_data = {'text': 'fn: message_a',
                         # Respond in the thread if thats where the message was triggered from
-                        'thread_ts': full_event['event']['event'].get('thread_ts'),
+                        'thread_ts': full_event['event'].get('thread_ts'),
                         }
         return message_data
 
     def upload_csv(self, output, full_event):
-        link = full_event['event']['event']['files'][0]['url_private_download']
-        file_id = full_event['event']['event']['files'][0]['id']
+        link = full_event['event']['files'][0]['url_private_download']
+        file_id = full_event['event']['files'][0]['id']
         file_ = slack_controller.download(link, f'/tmp/{file_id}.csv')
         message_data = {'text': 'fn: upload_csv. Downloaded to the server at {}'.format(file_),
                         # Respond in the thread if thats where the file was uploaded to
-                        'thread_ts': full_event['event']['event'].get('thread_ts'),
+                        'thread_ts': full_event['event'].get('thread_ts'),
                         }
         return message_data
 
@@ -43,6 +43,6 @@ class Example:
         message_data = {'method': 'reactions.add',
                         'name': output['reaction'][0],
                         # Adds the reaction to the correct message
-                        'timestamp': full_event['event']['event']['item']['ts'],
+                        'timestamp': full_event['event']['item']['ts'],
                         }
         return message_data

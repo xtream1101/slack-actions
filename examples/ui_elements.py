@@ -79,13 +79,13 @@ class UIElements:
 
     def menu_action(self, output, full_event):
         message_data = {'method': 'chat.update',
-                        'ts': full_event['event']['message_ts'],
-                        'channel': full_event['channel']['id'],
+                        'ts': full_event['message_ts'],
+                        'channel': full_event['sa_channel']['id'],
                         'text': f"thanks for playing {output['actions.selected_options.value'][0]}!",
                         'attachments': []}
         slack_controller.slack_client.api_call(**message_data)
 
-        user = f"<@{full_event['user']['id']}>"
+        user = f"<@{full_event['sa_user']['id']}>"
         return {'text': f'I updated the message above with your answer {user}'}
 
     def button(self, output, full_event):
@@ -131,5 +131,5 @@ class UIElements:
         return message_data
 
     def button_action(self, output, full_event):
-        user = f"<@{full_event['user']['id']}>"
+        user = f"<@{full_event['sa_user']['id']}>"
         return {'text': f"{user}, you choose {output['actions.0.value'][0]}"}

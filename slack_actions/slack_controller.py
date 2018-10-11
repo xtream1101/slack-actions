@@ -117,10 +117,10 @@ class SlackController:
             bool -- False if the help message should not be triggered, True if it was
         """
         if event_type != 'message' or not re.match(self.help_message_regex,
-                                                   full_data['event']['event']['text']):
+                                                   full_data['event']['text']):
             return False
 
-        all_channel_actions = self.get_all_channel_actions(full_data['channel']['name'])
+        all_channel_actions = self.get_all_channel_actions(full_data['sa_channel']['name'])
         self.help_action(all_channel_actions, full_data)
 
     def help_action(self, all_channel_actions, full_data):
@@ -133,9 +133,9 @@ class SlackController:
         Returns:
             dict -- The response to send to the slack api
         """
-        message_data = {'channel': full_data['channel']['id'],
+        message_data = {'channel': full_data['sa_channel']['id'],
                         'method': 'chat.postEphemeral',
-                        'user': full_data['user']['id'],
+                        'user': full_data['sa_user']['id'],
                         'text': 'Here are all the commands available in this channel',
                         'attachments': [],
                         }
@@ -322,15 +322,15 @@ class SlackController:
             full_data {dict} -- The event from the slack api as well as user and channel data
             event_type {str} -- Event type of the event that was sent by slack
         """
-        if not full_data['channel']:
+        if not full_data['sa_channel']:
             # Does not have access to channel
             return
 
         try:
-            all_channel_event_actions = self.get_all_channel_actions(full_data['channel']['name'],
+            all_channel_event_actions = self.get_all_channel_actions(full_data['sa_channel']['name'],
                                                                      event_type=event_type)
             # Default response
-            response = {'channel': full_data['channel']['id'],
+            response = {'channel': full_data['sa_channel']['id'],
                         'method': 'chat.postMessage',
                         }
 
@@ -421,10 +421,10 @@ class SlackController:
 
             for key, regex_pattern in trigger['pattern'].items():
                 key_parts = key.split('.')
-                if full_data['event']['type'] == 'event_callback':
-                    input_str = copy.deepcopy(full_data['event']['event'])
-                else:
+                if full_data['type'] == 'event_callback':
                     input_str = copy.deepcopy(full_data['event'])
+                else:
+                    input_str = copy.deepcopy(full_data)
 
                 for part in key_parts:
                     if isinstance(input_str, list):
