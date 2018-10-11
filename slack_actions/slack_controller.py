@@ -120,7 +120,7 @@ class SlackController:
                                                    full_data['event']['text']):
             return False
 
-        all_channel_actions = self.get_all_channel_actions(full_data['sa_channel']['name'])
+        all_channel_actions = self.get_all_channel_actions(full_data['sa_channel'].get('name', '__direct_message__'))
         self.help_action(all_channel_actions, full_data)
 
     def help_action(self, all_channel_actions, full_data):
@@ -328,7 +328,7 @@ class SlackController:
             return
 
         try:
-            all_channel_event_actions = self.get_all_channel_actions(full_data['sa_channel']['name'],
+            all_channel_event_actions = self.get_all_channel_actions(full_data['sa_channel'].get('name', '__direct_message__'),
                                                                      event_type=event_type)
             # Default response
             response = {'channel': full_data['sa_channel']['id'],
