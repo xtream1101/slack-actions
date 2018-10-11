@@ -6,7 +6,7 @@ with open('README.md', 'r') as f:
 setup(
     name='slack-actions',
     packages=['slack_actions'],
-    version='0.1.2',
+    version='0.2.0',
     description='Build custom slackbots with ease',
     long_description=long_description,
     long_description_content_type='text/markdown',
