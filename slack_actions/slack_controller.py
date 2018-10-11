@@ -1,7 +1,9 @@
 import os
 import re
 import copy
+import urllib
 import inspect
+import pathlib
 import logging
 from collections import defaultdict
 from slackclient import SlackClient
@@ -452,6 +454,42 @@ class SlackController:
             # All patterns match, fire callback
             if len(output) == num_patts:
                 return callback(output, full_data, *trigger['args'], **trigger['kwargs'])
+
+    def download(self, url, file_):
+        """
+        file_ is either a string (filename & path) to save the data to, or an in-memory object
+        """
+        rdata = None
+
+        try:
+            request = urllib.request.Request(url)
+            request.add_header('Authorization', 'Bearer {}'.format(self.SLACK_BOT_TOKEN))
+            # urllib downloads files a bit faster then requests does
+            with urllib.request.urlopen(request) as response:
+                data = response.read()
+                if isinstance(file_, str):
+                    # If a file path, then make sure the dirs are created
+                    file_path = os.path.dirname(os.path.abspath(file_))
+                    pathlib.Path(file_path).mkdir(parents=True, exist_ok=True)
+
+                    with open(file_, 'wb') as out_file:
+                        out_file.write(data)
+
+                    rdata = file_
+
+                else:
+                    file_.write(data)
+                    file_.seek(0)
+
+                    rdata = file_
+
+        except urllib.error.HTTPError as e:
+            logger.error("Download Http Error `{}` on {}".format(e.code, url))
+
+        except Exception:
+            logger.exception("Download Error on {}".format(url))
+
+        return rdata
 
 
 slack_controller = SlackController()

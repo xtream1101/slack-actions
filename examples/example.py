@@ -30,7 +30,10 @@ class Example:
         return message_data
 
     def upload_csv(self, output, full_event):
-        message_data = {'text': 'fn: upload_csv',
+        link = full_event['event']['event']['files'][0]['url_private_download']
+        file_id = full_event['event']['event']['files'][0]['id']
+        file_ = slack_controller.download(link, f'/tmp/{file_id}.csv')
+        message_data = {'text': 'fn: upload_csv. Downloaded to the server at {}'.format(file_),
                         # Respond in the thread if thats where the file was uploaded to
                         'thread_ts': full_event['event']['event'].get('thread_ts'),
                         }
