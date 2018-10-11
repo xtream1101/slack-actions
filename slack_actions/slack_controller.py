@@ -152,9 +152,10 @@ class SlackController:
         # Post to slack
         slack_response = self.slack_client.api_call(**message_data)
         if slack_response['ok'] is False:
-            error_message = "Slack Web API Response: {error} {content}"\
+            error_message = "Slack Web API Response: {error} {content} {response_metadata}"\
                             .format(error=slack_response['error'],
-                                    content=slack_response.get('needed', ''))
+                                    content=slack_response.get('needed', ''),
+                                    metadata=slack_response.get('response_metadata', ''))
             logger.error(error_message)
 
     def _get_conversation_list(self):
@@ -346,9 +347,10 @@ class SlackController:
                 response.update(callback_output)
                 slack_response = self.slack_client.api_call(**response)
                 if slack_response['ok'] is False:
-                    error_message = "Slack Web API Response: {error} {content}"\
+                    error_message = "Slack Web API Response: {error} {content} {metadata}"\
                                     .format(error=slack_response['error'],
-                                            content=slack_response.get('needed', ''))
+                                            content=slack_response.get('needed', ''),
+                                            metadata=slack_response.get('response_metadata', ''))
                     logger.error(error_message)
 
         except Exception:
