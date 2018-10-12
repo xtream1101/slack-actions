@@ -1,6 +1,7 @@
 import os
 import re
 import copy
+import types
 import urllib
 import inspect
 import pathlib
@@ -48,20 +49,37 @@ class SlackController:
                     else:
                         logger.warning("In add_commands: Command {cmd_name} has no trigger"
                                        .format(cmd_name=command.__name__))
+                elif isinstance(command, types.ModuleType):
+                    # `command` is a module
+                    command_module = command
+                    # get all functions from module and see what is in triggers
+                    all_mod_functions = inspect.getmembers(command_module,
+                                                           predicate=inspect.isfunction)
+                    for function in all_mod_functions:
+                        if function[1] in all_trigger_fns:
+                            channel_callbacks.append(function[1])
                 else:
                     command_class = command
                     if isinstance(command, type) is True:
-                        # An uninitialized class
-                        logger.warning("In add_commands: Adding an uninitialized class {cls_name}. Initializing..."
+                        # An uninitialized class (methods should be static)
+                        logger.warning("In add_commands: Adding an uninitialized class {cls_name}."
                                        .format(cls_name=command_class.__name__))
-                        command_class = command_class()
 
-                    # Get all methods from class to see what is in triggers
-                    all_class_methods = inspect.getmembers(command_class,
-                                                           predicate=inspect.ismethod)
-                    for method in all_class_methods:
-                        if method[1] in all_trigger_fns:
-                            channel_callbacks.append(method[1])
+                        # Get all methods from class to see what is in triggers (static methods are considered
+                        # to be functions by inspect.getmembers)
+                        all_class_methods = inspect.getmembers(command_class,
+                                                               predicate=inspect.isfunction)
+                        for method in all_class_methods:
+                            if method[1] in all_trigger_fns:
+                                channel_callbacks.append(method[1])
+
+                    else:
+                        # Get all methods from class to see what is in triggers (in this case they're actually methods)
+                        all_class_methods = inspect.getmembers(command_class,
+                                                               predicate=inspect.ismethod)
+                        for method in all_class_methods:
+                            if method[1] in all_trigger_fns:
+                                channel_callbacks.append(method[1])
 
             self.channel_to_callbacks[channel].extend(channel_callbacks)
 
@@ -328,8 +346,8 @@ class SlackController:
             return
 
         try:
-            all_channel_event_actions = self.get_all_channel_actions(full_data['sa_channel'].get('name', '__direct_message__'),
-                                                                     event_type=event_type)
+            all_channel_event_actions = self.get_all_channel_actions(
+                full_data['sa_channel'].get('name', '__direct_message__'), event_type=event_type)
             # Default response
             response = {'channel': full_data['sa_channel']['id'],
                         'method': 'chat.postMessage',
