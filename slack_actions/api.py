@@ -54,7 +54,7 @@ class Event(object):
                 file_data = slack_controller.slack_client.api_call('files.info', file=event['event']['file_id'])
                 event['sa_channel'] = slack_controller.get_channel(file_data['file']['channels'][0])
 
-            elif event_type in ['interactive_message']:
+            elif event_type in ['interactive_message', 'dialog_submission']:
                 event['sa_user'] = slack_controller.get_user(event['user']['id'])
                 event['sa_channel'] = slack_controller.get_channel(event['channel']['id'])
 
