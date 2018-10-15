@@ -1,10 +1,11 @@
 from slack_actions.slack_controller import slack_controller
 
 
-class Example:
+class CommandClass:
 
     def __init__(self):
-        # TODO: Make it so these can be directly on the class methods
+        # If you plan to initialize an object of this class, you CANNOT use decorators for the triggers or help
+        # messages. You must write it in the __init__ function like this:
         self.message_a = slack_controller.trigger(['message'], {'text': 'fooA'})(self.message_a)
         self.message_a = slack_controller.help_message(author_name="trigger:message",
                                                        color="#7575a3",
