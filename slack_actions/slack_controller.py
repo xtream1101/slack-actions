@@ -96,31 +96,31 @@ class SlackController:
         self.channels = self._get_conversation_list()  # Includes groups and channels
         self.users = self._get_user_list()
 
-        self.BOT_ID = self._get_bot_id()
-        self.BOT_USER_ID = self._get_bot_user_id(self.BOT_ID)
+        self.BOT_USER_ID = self._get_bot_user_id()
+        self.BOT_ID = self._get_bot_id(self.BOT_USER_ID)
         self.BOT_NAME = '<@{}>'.format(self.BOT_USER_ID)
 
         if self.help_message_regex is None:
             self.help_message_regex = re.compile('^(?:{bot_name} )?help$'.format(bot_name=self.BOT_NAME),
                                                  flags=re.IGNORECASE)
 
-    def _get_bot_id(self):
-        slack_response = self.slack_client.api_call('users.profile.get')
+    def _get_bot_user_id(self):
+        slack_response = self.slack_client.api_call('auth.test')
+        if slack_response['ok'] is False:
+            error_message = "{error} {content}".format(error=slack_response['error'],
+                                                       content=slack_response.get('needed', ''))
+            raise SlackApiError(error_message)
+
+        return slack_response['user_id']
+
+    def _get_bot_id(self, bot_user_id):
+        slack_response = self.slack_client.api_call('users.info', user=bot_user_id)
         if slack_response['ok'] is False:
             error_message = "{error} {content}".format(error=slack_response['error'],
                                                        content=slack_response.get('needed', ''))
             raise SlackApiError(error_message)
         else:
-            return slack_response['profile']['bot_id']
-
-    def _get_bot_user_id(self, bot_id):
-        slack_response = self.slack_client.api_call('bots.info', bot=bot_id)
-        if slack_response['ok'] is False:
-            error_message = "{error} {content}".format(error=slack_response['error'],
-                                                       content=slack_response.get('needed', ''))
-            raise SlackApiError(error_message)
-
-        return slack_response['bot']['user_id']
+            return slack_response['user']['profile']['bot_id']
 
     def help_check(self, full_data, event_type):
         """Check if the help message should be triggered

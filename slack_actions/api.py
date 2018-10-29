@@ -35,7 +35,7 @@ class Event(object):
                 # Do not let the bot interact with itself, but still allow other bots to trigger it
                 return
 
-            logger.debug("Original slack event:\n" + str(json.dumps(event)))
+            logger.debug({"original_slack_event": event})
 
             try:
                 # Get the event type
@@ -77,7 +77,7 @@ class Event(object):
         except Exception:
             logger.exception("Broke generating `event`")
 
-        logger.debug("Full event data:\n" + str(json.dumps(event)))
+        logger.debug({"full_event": event})
 
         # 2 - Check if its the help message, if so do nothing else
         if slack_controller.help_check(event, event_type):

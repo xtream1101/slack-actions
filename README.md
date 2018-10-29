@@ -9,7 +9,7 @@ This project is to make it simple to have a single slackbot that can have differ
 
 
 ## How to use
-First you need to create a Slack Workspace App. You will find your Access Token under the _OAuth & Permissions_ section.  
+First you need to create a Slack App with a bot user. You will find your Access Token under the _OAuth & Permissions_ section (use the bot token).  
 With Slack apps, you need to give it permissions for what you want it to do. By default it needs at least these permissions to start:
 - users:read _(needed to get the users in the team)_
 - users.profile:read _(needed to get the bot info and user emails)_
@@ -17,7 +17,7 @@ With Slack apps, you need to give it permissions for what you want it to do. By 
 
 Remember that each time to edit the permissions you will need to re install the App to your team for the new/updated permissions to take affect.
 
-Since slack apps work by hitting an api endpoint, you will need an public facing endpoint to test with. You can use [ngrok](https://ngrok.com/) or anything similar for development _(see below for custom solution)_. The endpoint that you will be hitting on the server will always be `example.com/slack/event`. This will need to be added in the _Event Subscriptions_ section of the App. Be sure to add _Workplace Events_ otherwise slack will never hit your bot with an action. To get started try adding **_message.channels_**, for each event you add you will need to add the required permission too. In this case the permission **_channels:history_** will be added.
+Since slack apps work by hitting an api endpoint, you will need an public facing endpoint to test with. You can use [ngrok](https://ngrok.com/) or anything similar for development _(see below for custom solution)_. The endpoint that you will be hitting on the server will always be `example.com/slack/event`. This will need to be added in the _Event Subscriptions_ section of the App. Be sure to add _Bot Events_ and _Workspace Events_ otherwise slack will never hit your bot with an action. _Bot Events_ should be used whenever possible as it limits the number of events you receive to just those that occur in the channels you've invited the bot to. _Workspace Events_ notifications include all events of your selected types that occur in every public channel in your workspace and can get quite noisy. To get started try adding **_message.channels_**. For each event you add you will need to add the required permission too. In this case the permission **_channels:history_** will be added.
 
 To add the app to a channel, go into the app settings and add to any channels that you would like it to be in.
 
@@ -41,7 +41,7 @@ def foobar(output, full_event):
 
 
 # The token can also be set by an env var `SLACK_BOT_TOKEN`, which will be used first if it exists
-auth_token = 'xoxa-app-token-here'
+auth_token = 'xoxb-app-bot-token-here'
 # or it can be set in the script like so
 slack_controller.setup(slack_bot_token=auth_token)
 
