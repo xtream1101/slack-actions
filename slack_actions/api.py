@@ -31,7 +31,8 @@ class Event(object):
         # 1. Get the user, channel, and file (if needed) from the event
         try:
             if ((event.get('type') == 'interactive_message' and event['user']['id'] == slack_controller.BOT_ID) or
-                    event.get('event', {}).get('bot_id') == slack_controller.BOT_ID):
+                    event.get('event', {}).get('bot_id') == slack_controller.BOT_ID or
+                    event.get('event', {}).get('user') == slack_controller.BOT_USER_ID):
                 # Do not let the bot interact with itself, but still allow other bots to trigger it
                 return
 
